@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?><artifacts>
+    <artifact name="vehicle_revenue_license_service" groupId="com.buddhima.vehicle_revenue_license_service.api" version="1.0.0" type="synapse/api" serverRole="EnterpriseServiceBus">
+        <file>src/main/synapse-config/api/vehicle_revenue_license_service.xml</file>
+    </artifact>
+</artifacts>

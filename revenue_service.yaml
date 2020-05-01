@@ -1,0 +1,232 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: Gateway
+metadata:
+  name: revenue-license-gateway
+spec:
+  selector:
+    istio: ingressgateway # use istio default controller
+  servers:
+  - port:
+      number: 80
+      name: http
+      protocol: HTTP
+    hosts:
+    - "*"
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: vs-revenue-license
+spec:
+  hosts:
+  - "*"
+  gateways:
+  - revenue-license-gateway
+  http:
+  - match:
+    - uri:
+        exact: /revenue-license
+    route:
+    - destination:
+        host: revenue-license
+        port:
+          number: 8290
+  - match:
+    - uri:
+        exact: /emmision-test
+    route:
+    - destination:
+        host: emmision-test
+        port:
+          number: 80
+  - match:
+    - uri:
+        exact: /license
+    route:
+    - destination:
+        host: license
+        port:
+          number: 80
+
+---
+##################################################################################################
+# Revenue license services
+##################################################################################################
+apiVersion: v1
+kind: Service
+metadata:
+  name: revenue-license
+  labels:
+    app: revenue_license
+    service: revenue_license
+spec:
+  ports:
+  - port: 8290
+    name: http
+  selector:
+    app: revenue_license
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: sa-revenue-license
+  labels:
+    account: revenue_license
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: revenue-license-v1
+  labels:
+    app: revenue_license
+    version: v1
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: revenue_license
+      version: v1
+  template:
+    metadata:
+      labels:
+        app: revenue_license
+        version: v1
+    spec:
+      serviceAccountName: sa-revenue-license
+      containers:
+      - name: revenue-license
+        image: buddhima/revenue_license_service:1.0.0
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8290
+---
+
+##################################################################################################
+# Emission test service
+##################################################################################################
+apiVersion: v1
+kind: Service
+metadata:
+  name: emmision-test
+  labels:
+    app: emission_test
+    service: emission_test
+spec:
+  ports:
+  - port: 80
+    targetPort: 8080
+    name: http
+  selector:
+    app: emission_test
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: sa-emission-test
+  labels:
+    account: emission_test
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: emission-test-v1
+  labels:
+    app: emission_test
+    version: v1
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: emission_test
+      version: v1
+  template:
+    metadata:
+      labels:
+        app: emission_test
+        version: v1
+    spec:
+      serviceAccountName: sa-emission-test
+      containers:
+      - name: emission-test
+        image: buddhima/emmision_test_server:1.0.0
+        ports:
+        - containerPort: 8080
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: emission-test-v2
+  labels:
+    app: emission_test
+    version: v2
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: emission_test
+      version: v2
+  template:
+    metadata:
+      labels:
+        app: emission_test
+        version: v2
+    spec:
+      serviceAccountName: sa-emission-test
+      containers:
+      - name: emission-test
+        image: buddhima/emmision_test_server:2.0.0
+        ports:
+        - containerPort: 8080
+---
+##################################################################################################
+# License service
+##################################################################################################
+apiVersion: v1
+kind: Service
+metadata:
+  name: license
+  labels:
+    app: license
+    service: license
+spec:
+  ports:
+  - port: 80
+    targetPort: 8080
+    name: http
+  selector:
+    app: license
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: sa-license
+  labels:
+    account: license
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: license-v1
+  labels:
+    app: license
+    version: v1
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: license
+      version: v1
+  template:
+    metadata:
+      labels:
+        app: license
+        version: v1
+    spec:
+      serviceAccountName: sa-license
+      containers:
+      - name: license
+        image: buddhima/license_server:1.0.0
+        ports:
+        - containerPort: 8080
+---
+
